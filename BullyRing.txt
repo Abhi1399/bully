@@ -1,54 +1,46 @@
-import java.io.*;
 import java.util.Scanner;
 
-public class leader_bully {
+public class BullyAlgorithm {
     static int n;
-    static int pro[] = new int[10];  // Priority array
-    static int sta[] = new int[10];  // Status array (1 = alive, 0 = dead)
-    static int co;                   // Coordinator
+    static int[] pro = new int[10];
+    static int[] sta = new int[10];
+    static int co;
 
-    public static void main(String args[]) throws IOException {
-        System.out.println("----------------------------------------------------------");
-        System.out.print("Enter the number of processes : ");
+    public static void main(String[] args) {
         Scanner in = new Scanner(System.in);
+        System.out.print("Enter the number of processes: ");
         n = in.nextInt();
-        System.out.println("----------------------------------------------------------");
 
-        int i;
-
-        // Input status and priority of each process
-        for (i = 0; i < n; i++) {
-            System.out.println("**For process " + (i + 1) + " :");
-            System.out.print("---> Status (1 = alive / 0 = dead): ");
+        for (int i = 0; i < n; i++) {
+            System.out.println("For Process " + (i + 1) + ":");
+            System.out.print("---> Status (1 = alive, 0 = down): ");
             sta[i] = in.nextInt();
-            System.out.print("---> Priority (higher = stronger): ");
+            System.out.print("---> Priority: ");
             pro[i] = in.nextInt();
-            System.out.println("===============");
         }
 
-        System.out.println("----------------------------------------------------------");
-        System.out.print("***Which process will initiate election? : ");
-        int ele = in.nextInt();  // Process number (1-based index)
-        System.out.println("----------------------------------------------------------");
+        System.out.print("Which process will initiate election? (1 to " + n + "): ");
+        int ele = in.nextInt();
+        elect(ele);
 
-        elect(ele);  // Start election from this process
-
-        System.out.println("***Final coordinator is : Process " + co);
-        System.out.println("----------------------------------------------------------");
+        System.out.println("Final coordinator is Process " + co);
     }
 
     static void elect(int ele) {
-        ele = ele - 1;      // Convert to 0-based index
-        co = ele + 1;       // Assume initiator is coordinator initially
-
+        ele = ele - 1; // Convert to 0-based index
         for (int i = 0; i < n; i++) {
-            // If someone has higher priority
-            if (pro[ele] < pro[i]) {
-                System.out.println("***** Election message is sent from Process " + (ele + 1) + " to Process " + (i + 1) + " *****");
-                if (sta[i] == 1) {
-                    // Recurse from higher active process
-                    elect(i + 1);
-                }
+            if (pro[ele] < pro[i] && sta[i] == 1) {
+                System.out.println("Election message sent from Process " + (ele + 1) + " to Process " + (i + 1));
+                elect(i + 1); // Recursive call for higher process
+            }
+        }
+
+        // After election, find the highest-priority alive process as coordinator
+        int max = -1;
+        for (int i = 0; i < n; i++) {
+            if (sta[i] == 1 && pro[i] > max) {
+                max = pro[i];
+                co = i + 1;
             }
         }
     }
@@ -57,64 +49,55 @@ public class leader_bully {
 
 
 
-import java.io.*;
 import java.util.Scanner;
 
-public class leader_ring {
+public class RingAlgorithm {
     static int n;
-    static int pro[] = new int[100];  // Process priority
-    static int sta[] = new int[100];  // Process status: 1 = alive, 0 = dead
-    static int co;                    // Coordinator (final leader)
+    static int[] pro = new int[100]; // Priorities
+    static int[] sta = new int[100]; // Status (1 = alive, 0 = down)
+    static int co; // Coordinator
 
-    public static void main(String args[]) throws IOException {
+    public static void main(String[] args) {
         Scanner in = new Scanner(System.in);
-        System.out.println("----------------------------------------------------------");
         System.out.print("Enter the number of processes: ");
         n = in.nextInt();
-        System.out.println("----------------------------------------------------------");
 
         for (int i = 0; i < n; i++) {
-            System.out.println("** For process " + (i + 1) + ":");
-            System.out.print("---> Status (1 = alive, 0 = dead): ");
+            System.out.println("For Process " + (i + 1) + ":");
+            System.out.print("---> Status (1 = alive, 0 = down): ");
             sta[i] = in.nextInt();
             System.out.print("---> Priority: ");
             pro[i] = in.nextInt();
-            System.out.println("===============");
         }
 
-        System.out.println("The ring formed is: ");
+        System.out.println("The ring is formed as:");
         for (int i = 1; i <= n; i++) {
             System.out.print(i + " -> ");
         }
         System.out.println("1");
-        System.out.println("----------------------------------------------------------");
 
-        System.out.print("Which process will initiate election? : ");
-        int ele = in.nextInt(); // 1-based input
-        System.out.println("----------------------------------------------------------");
-
+        System.out.print("Which process will initiate election? (1 to " + n + "): ");
+        int ele = in.nextInt();
         elect(ele);
-        System.out.println("Final coordinator is: Process " + co);
-        System.out.println("----------------------------------------------------------");
+
+        System.out.println("Final coordinator is Process " + co);
     }
 
     static void elect(int ele) {
+        int start = ele - 1; // Convert to 0-based index
+        int i = start;
         int maxPriority = -1;
         int coordinator = -1;
 
-        int i = (ele - 1); // Convert to 0-based index
-        int start = i;
-
-        // Traverse the ring once
         do {
-            if (sta[i] == 1) { // Only consider alive processes
+            if (sta[i] == 1) {
                 System.out.println("Election message passed to Process " + (i + 1) + " (Priority: " + pro[i] + ")");
                 if (pro[i] > maxPriority) {
                     maxPriority = pro[i];
-                    coordinator = i + 1; // Store 1-based process number
+                    coordinator = i + 1;
                 }
             }
-            i = (i + 1) % n; // Move to next in ring (wrap around)
+            i = (i + 1) % n; // Next in ring
         } while (i != start);
 
         co = coordinator;
